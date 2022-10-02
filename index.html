@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"
+      integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css"
+      integrity="sha512-YWzhKL2whUzgiheMoBFwW8CKV4qpHQAEuvilg9FAn5VJUDwKZZxkJNuGM4XkWuk94WCrrwslk8yWNGmY1EduTA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.9.0/brython_stdlib.js"></script> 
+    <title>Sistema de Ecuaciones</title>
+</head>
+
+<style>
+  .tabla {
+    margin-left: 100px !important;
+    color: red;
+  }
+  .tablamayor {
+    border: 2px solid black;
+  }
+</style>
+
+<body onload="brython()">
+    
+    
+ 
+
+    <h1 class="text-center mt-5">SISTEMAS DE ECUACIONES</h1>
+  
+    <div>
+      <div>
+        <div class="servicios">
+          <div>
+            <label for="">Numero de incognitas</label>
+            <input id="filas" type="text" placeholder="Numero de filas"><br>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-primary mt-3" onclick="crearsistemas()">Crear Sistema</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        function crearsistemas() {
+          document.getElementById("sistema").innerHTML="";
+          for(var i=0; i<filas.value; i++) {
+            for(var j=0; j<filas.value; j++) {
+              document.getElementById("sistema").innerHTML+="<input id='"+i+j+"' name='dato[]' class='datos' type='text' placeholder='a "+i+j+"'>";
+            }
+            document.getElementById("sistema").innerHTML+="<input id='"+i+"' name='datob[]' class='datosb mx-5' type='text' placeholder='b "+i+"'>";
+            document.getElementById("sistema").innerHTML+="<br>";
+          }
+          
+          document.getElementById("sistema").innerHTML+='<select id="select1" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example"">'+
+              '<option selected>Selecccionar el metodo de resolucion</option>'+
+              '<option value="1">JACOBI</option>'+
+              '<option value="2">GAUSS SEIDEL</option>'+
+              '<option value="3">DESCOMPOSCION LU</option>'+
+            '</select> <br>';
+
+            document.getElementById("sistema").innerHTML+="<input id='tole'  type='text' placeholder='Tolerancia'><br>";
+          
+          document.getElementById("sistema").innerHTML+='<button class="btn btn-primary mt-3" onclick="solucionarsistemas()">Solucionar Sistema</button>';
+          
+        }
+
+        function solucionarsistemas() {
+          document.getElementById("resolucionsistema").innerHTML="";
+          const $select = document.querySelector("#select1").value;
+            matrixa = matriz();
+            matrixb = matrizb();
+
+          tol = tole.value;
+          
+          switch ($select) {
+            case "1":
+              jacobi(matrixa, matrixb, tol);
+              break;
+            case "2":
+              document.getElementById("resolucionsistema").innerHTML+="<br>ESTOY SOLUCIONANDO POR SEIDEL";
+              break;
+            case "3":
+              break;
+            default:
+              document.getElementById("resolucionsistema").innerHTML="<br>SELECCIONA UNA OPCION DE RESOLUCION";
+              break;
+          }
+        }
+
+        function matriz() {
+          var arrayInputsa = new Array();
+          var valuesInputs = document.getElementsByClassName('datos'),
+          namesValues = [].map.call(valuesInputs, 
+              function(dataInput) {
+                arrayInputsa.push(dataInput.value);
+              });
+              var matrizreala = arraymatrix(arrayInputsa, filas.value);
+              return matrizreala;
+        }
+
+        function matrizb() {
+          var arrayInputsb = new Array();
+          var valuesInputsb = document.getElementsByClassName('datosb'),
+          namesValuesb = [].map.call(valuesInputsb, 
+              function(dataInputb) {
+                arrayInputsb.push(dataInputb.value);
+              });
+              var matrizrealb = arraymatrix(arrayInputsb, filas.value);
+              return matrizrealb;
+        }
+
+
+        function arraymatrix(list, elementsPerSubArray) {
+          var matrix = [], i, k;
+          for (i = 0, k = -1; i < list.length; i++) {
+              if (i % elementsPerSubArray === 0) {
+                  k++;
+                  matrix[k] = [];
+              }
+              matrix[k].push(list[i]);
+          }
+          return matrix;
+      }
+        
+
+        function jacobi(matrixa, matrixb, tol) {
+          a = matrixa.slice();
+          m = zeros(matrixa);
+          b = matrixb.slice();
+          c = [];
+          for(var i=0; i<filas.value; i++) {
+            for(var j=0; j<filas.value; j++) {
+              if(i!=j){
+                m[i][j] = -a[i][j]/a[i][i];
+              }
+            }
+            c.push(b[0][i]/a[i][i]);
+          }
+
+          nro_ite = 0
+          error = [];
+          x = zeros(matrixb);
+          sw=true;  
+
+          while(sw) {
+            x1 = zeros(matrixb);
+            suma = 0;
+
+            for(var i=0; i<filas.value; i++) {
+              for(var j=0; j<filas.value; j++) {
+                suma = suma + m[i][j]*x[0][j];
+              }
+              suma = suma + c[i];
+              x1[0][i]=suma;
+              suma = 0;
+              error[i] = Math.abs(x1[0][i] - x[0][i])  
+            }
+
+            max_error = 0;
+            for(var i=0; i<filas.value; i++) {
+              if(error[i]>max_error){
+                max_error = error[i];
+              } 
+            }
+            if(max_error<tol) {
+              sw=false;
+            }
+            x = x1.slice();
+            
+            document.getElementById("resolucionsistema").innerHTML+=nro_ite;
+            for(var i=0; i<filas.value; i++)
+              document.getElementById("resolucionsistema").innerHTML+="&nbsp&nbsp&nbsp&nbsp&nbsp&nbspx"+(i+1)+": "+x[0][i] ;
+            document.getElementById("resolucionsistema").innerHTML+="<br>";
+            nro_ite = nro_ite +1  ;
+          }
+
+        }
+
+        const clone = (input) => {
+          let result = [];
+          input.forEach((row, i) => {
+            result.push([]);
+            row.forEach(col => {
+              result[i].push(col);
+            });
+          });
+          return result;
+        }
+
+        const zeros = (input) => {
+          let result = [];
+          input.forEach((row, i) => {
+            result.push([]);
+            row.forEach(col => {
+              result[i].push(0);
+            });
+          });
+          return result;
+        }
+        
+
+    </script>
+
+    <div id="sistema"></div>
+
+
+    <div id="resolucionsistema">
+
+    </div>
+      
+    
+    
+
+      <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF"
+      crossorigin="anonymous"
+    ></script>
+</body>
+</html>
